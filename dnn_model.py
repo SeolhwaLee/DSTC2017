@@ -7,7 +7,7 @@ from general_utils import Progbar, print_sentence
 import numpy as np
 
 
-class MLP():
+class dnn():
     def __init__ (self, input_size, num_neuron, num_classes, utter_embed, config):
         self.input_size = input_size
         self.num_neuron = num_neuron
@@ -191,9 +191,6 @@ class MLP():
         with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             # variables need to be initialized before we can use them
             sess.run(tf.global_variables_initializer())
-
-            # timestamp = str(int(time.time()))
-            # writer = tf.summary.FileWriter(os.path.join("./", "model_summaries", timestamp), sess.graph)
 
             for step in range(10):
                 # accuracy, f1_score = self.run_epoch(sess, train_data, dev_data, test_data, step)
