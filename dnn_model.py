@@ -26,7 +26,7 @@ class Dnn():
     def add_logits_op(self):
         with tf.variable_scope('hidden_layer') as scope:
             reshaped_features = tf.transpose(self.input_features, [1, 0, 2])
-            print('reshaped_features: ', reshaped_features.shape)
+            # print('reshaped_features: ', reshaped_features.shape)
             reshaped_features = tf.reshape(reshaped_features, [-1, self.input_size])
 
             # layer1
@@ -35,19 +35,6 @@ class Dnn():
             # y1 = tf.matmul(x, W1) + b1
             z = tf.add(tf.matmul(reshaped_features, weight), bias)
             y = tf.nn.relu(z)
-            print("y shape:", y.shape)
-
-            name = ['hidden_layer2', 'hidden_layer3', 'hidden_layer4', 'hidden_layer5', 'hidden_layer6', 'hidden_layer7',
-                    'hidden_layer8', 'hidden_layer9']
-
-            # {print(layer) for layer in sorted(set(name))}
-            # for i in range(1):
-            #     with tf.variable_scope(name[i]) as scope:
-            #        # layer1
-            #        weight = tf.get_variable('weight', [self.input_size, self.num_neuron], initializer=tf.random_normal_initializer(stddev=math.sqrt(2/self.num_neuron)))
-            #        bias = tf.get_variable('bias', initializer=tf.zeros([self.num_neuron, ]))
-            #        # y1 = tf.matmul(x, W1) + b1
-            #        y = tf.nn.relu(tf.add(tf.matmul(y, weight), bias))
 
         with tf.variable_scope('output_layer') as scope:
             # layer2
@@ -55,7 +42,6 @@ class Dnn():
             bias = tf.get_variable('bias', initializer=tf.zeros([self.num_classes, ]))
 
         with tf.variable_scope('loss') as scope:
-            # cross-entropy 모델을 설정한다.
             # y_output = tf.nn.softmax(tf.matmul(y, weight) + bias)
             y_output = tf.matmul(y, weight) + bias
             y_output = tf.expand_dims(y_output, 0)
@@ -63,7 +49,7 @@ class Dnn():
 
             self.cross_entropys = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.y, labels=self.ground_label)
             self.cross_entropy = tf.reduce_mean(self.cross_entropys)
-            self.train_step = tf.train.AdamOptimizer().minimize(self.cross_entropy)
+            self.train_step = tf.train.AdamOptimizer(self.config.lr).minimize(self.cross_entropy)
 
             tf.summary.scalar('loss', self.cross_entropy)
 
@@ -99,7 +85,7 @@ class Dnn():
             ground_label_list = []
             for label in ground_label:
                 # label.strip().encode('utf-8')
-                ground_label_list.append(self.cate_mapping_dict[label.strip()])
+                ground_label_list.append(self.cate_mapping_dict[label.strip().encode('utf-8')])
 
             ground_label_list = np.array([ground_label_list])
 
@@ -108,19 +94,12 @@ class Dnn():
                 self.ground_label: ground_label_list
             }
 
-            self.merged = tf.summary.merge_all()
+            # self.merged = tf.summary.merge_all()
             self.file_writer = tf.summary.FileWriter(self.config.output_path, sess.graph)
 
             _, train_loss= sess.run([self.train_step, self.cross_entropy], feed_dict=feed_dict)
 
             prog.update(i + 1, [("train loss", train_loss)])
-
-            # if i % 10 == 0:
-            #     self.file_writer.add_summary(summary, epoch * num_batches + i)
-
-            # accuracy, f1_score = self.run_evaluate(sess, test_data[300:])
-            # self.logger.info("- dev acc {:04.2f} - f1 {:04.2f}".format(100 * accuracy, 100 * f1_score))
-            # return accuracy, f1_score
 
     def run_evaluate(self, sess, test_data):
         # create confusion matrix to evaluate precision and recall
@@ -179,7 +158,6 @@ class Dnn():
 
         return accuracy, f1_score
 
-
     def train(self, train_data, dev_data, test_data):
         best_score = 0
         nepoch_no_imprv = 0
@@ -191,6 +169,7 @@ class Dnn():
 
             for epoch in range(self.config.num_epochs):
                 # accuracy, f1_score = self.run_epoch(sess, train_data, dev_data, test_data, step)
+<<<<<<< HEAD
                 (self.run_epoch(sess, train_data, dev_data, test_data, epoch))
 
                 # add for early stopping
@@ -216,3 +195,7 @@ class Dnn():
             # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             # print(sess.run(accuracy, feed_dict={self.input_features: self.input_features, self.ground_label: test_data[300:]}))
 
+=======
+                print('Step : ', epoch)
+                (self.run_epoch(sess, train_data, dev_data, test_data, epoch))
+>>>>>>> 1fdbc15cfebb5152f8dc940b85aecc7194281f2d

@@ -53,6 +53,7 @@ class dataload():
         except:
             print('Data load Error')
 
+
 class UtteranceEmbed():
     def __init__(self, file_name, dim=300):
         self.dim = dim
