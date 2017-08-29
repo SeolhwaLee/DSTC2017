@@ -111,12 +111,12 @@ class Dnn():
             self.merged = tf.summary.merge_all()
             self.file_writer = tf.summary.FileWriter(self.config.output_path, sess.graph)
 
-            _, train_loss, summary = sess.run([self.train_step, self.cross_entropy, self.merged], feed_dict=feed_dict)
+            _, train_loss= sess.run([self.train_step, self.cross_entropy], feed_dict=feed_dict)
 
             prog.update(i + 1, [("train loss", train_loss)])
 
-            if i % 10 == 0:
-                self.file_writer.add_summary(summary, epoch * num_batches + i)
+            # if i % 10 == 0:
+            #     self.file_writer.add_summary(summary, epoch * num_batches + i)
 
             # accuracy, f1_score = self.run_evaluate(sess, test_data[300:])
             # self.logger.info("- dev acc {:04.2f} - f1 {:04.2f}".format(100 * accuracy, 100 * f1_score))
@@ -189,9 +189,9 @@ class Dnn():
             # variables need to be initialized before we can use them
             sess.run(tf.global_variables_initializer())
 
-            for step in range(10):
+            for epoch in range(self.config.num_epochs):
                 # accuracy, f1_score = self.run_epoch(sess, train_data, dev_data, test_data, step)
-                (self.run_epoch(sess, train_data, dev_data, test_data, step))
+                (self.run_epoch(sess, train_data, dev_data, test_data, epoch))
 
                 # add for early stopping
                 # if f1_score >= best_score:
