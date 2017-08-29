@@ -1,5 +1,5 @@
 from config import Config
-from dnn_model import dnn
+from dnn_model import Dnn
 from data_process import Data
 from utterance_embed import UtteranceEmbed
 
@@ -16,7 +16,7 @@ def main(config):
     input_size = (utter_embed.get_vector_size() * 2) # concat size
     num_neuron = 7500
 
-    model = dnn(input_size, num_neuron, 3, utter_embed, config)
+    model = Dnn(input_size, num_neuron, 3, utter_embed, config)
     model.build()
     model.train(train_data, dev_data, test_data)
 
