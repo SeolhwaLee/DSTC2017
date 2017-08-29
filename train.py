@@ -11,7 +11,7 @@ def main(config):
     test_data = data.test_set
 
     # load word2vec
-    utter_embed = UtteranceEmbed('../bilingual/wiki/wiki_en_model')
+    utter_embed = UtteranceEmbed(config.word2vec_filename)
 
     input_size = (utter_embed.get_vector_size() * 2) # concat size
     num_neuron = 7500

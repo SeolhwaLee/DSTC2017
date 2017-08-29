@@ -19,7 +19,8 @@ class Config():
 
     reload = False
 
-    num_epochs = 20
+    lr = 0.005
+    num_epochs = 50
     batch_size = 10
     embed_method = 'word2vec'
 
