@@ -168,34 +168,5 @@ class Dnn():
             sess.run(tf.global_variables_initializer())
 
             for epoch in range(self.config.num_epochs):
-                # accuracy, f1_score = self.run_epoch(sess, train_data, dev_data, test_data, step)
-<<<<<<< HEAD
-                (self.run_epoch(sess, train_data, dev_data, test_data, epoch))
-
-                # add for early stopping
-                # if f1_score >= best_score:
-                #     nepoch_no_imprv = 0
-                #     if not os.path.exists(self.config.model_output):
-                #         os.makedirs(self.config.model_output)
-                #     saver.save(sess, self.config.model_output)
-                #     best_score = f1_score
-                #     self.logger.info("- new best score!")
-                #
-                # else:
-                #     nepoch_no_imprv += 1
-                #     if nepoch_no_imprv >= self.config.nepoch_no_imprv:
-                #         self.logger.info("- early stopping {} epochs without improvement".format(
-                #             nepoch_no_imprv))
-                #         break
-
-
-
-            # # 학습된 모델이 얼마나 정확한지를 출력한다.
-            # correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.ground_label, 1))
-            # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-            # print(sess.run(accuracy, feed_dict={self.input_features: self.input_features, self.ground_label: test_data[300:]}))
-
-=======
                 print('Step : ', epoch)
-                (self.run_epoch(sess, train_data, dev_data, test_data, epoch))
->>>>>>> 1fdbc15cfebb5152f8dc940b85aecc7194281f2d
+                self.run_epoch(sess, train_data, dev_data, test_data, epoch)
