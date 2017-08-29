@@ -62,7 +62,7 @@ class MLP():
             y_output = tf.matmul(y, weight) + bias
             y_output = tf.expand_dims(y_output, 0)
             self.y = y_output
-            # y = tf.Print(y, [y])
+
             self.cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.y, labels=self.ground_label)
             self.cross_entropy = tf.reduce_mean(self.cross_entropy)
             # self.cross_entropy = tf.reduce_mean(-tf.reduce_sum(self.ground_label * tf.log(self.y), reduction_indices=[1]))
@@ -70,11 +70,13 @@ class MLP():
 
             tf.summary.scalar('loss', self.cross_entropy)
 
-
+    def add_pred_op(self):
+        self.labels_pred = tf.cast(tf.argmax(self.y, axis=-1), tf.int32)
 
     def build(self):
         self.add_placeholders()
         self.add_logits_op()
+        self.add_pred_op()
 
 
     def run_epoch(self, sess, train_data, dev_data, test_data, epoch):
@@ -119,7 +121,72 @@ class MLP():
             if i % 10 == 0:
                 self.file_writer.add_summary(summary, epoch * num_batches + i)
 
+            # accuracy, f1_score = self.run_evaluate(sess, test_data[300:])
+            # self.logger.info("- dev acc {:04.2f} - f1 {:04.2f}".format(100 * accuracy, 100 * f1_score))
+            # return accuracy, f1_score
+
+    def run_evaluate(self, sess, test_data):
+        # create confusion matrix to evaluate precision and recall
+        confusion_matrix = np.zeros(shape=(3, 3))
+
+        accuracy_list = []
+        for i, (concat_utter_list, ground_label) in enumerate(minibatches(test_data, self.config.batch_size)):
+            input_features = []
+            for each_utter_list in concat_utter_list:
+                user_sentence = each_utter_list[0]
+                system_sentence = each_utter_list[1]
+                if self.config.embed_method == 'word2vec':
+                    user_embedding = self.utter_embed.embed_utterance(user_sentence)
+                    system_embedding = self.utter_embed.embed_utterance(system_sentence)
+                    input_feature = np.concatenate((user_embedding, system_embedding))
+                    input_features.append(input_feature)
+
+            if self.config.embed_method == 'word2vec':
+                input_features = np.array([input_features])
+
+            ground_label_list = []
+            for label in ground_label:
+                ground_label_list.append(self.cate_mapping_dict[label.strip()])
+            ground_label_list = np.array([ground_label_list])
+
+            feed_dict = {
+                self.input_features: input_features,
+                # self.dropout_keep_prob: 1.0
+            }
+
+            labels_pred = sess.run([self.labels_pred], feed_dict=feed_dict)
+
+            predict_list = list(labels_pred)[0][0]
+            ground_list = ground_label_list[0]
+
+            correct_pred = 0.
+            for pred_ele, ground_ele in zip(predict_list, ground_list):
+                confusion_matrix[pred_ele][ground_ele] += 1
+                if pred_ele == ground_ele:
+                    correct_pred += 1
+                else:
+                    continue
+            accuracy_list.append(correct_pred / len(ground_list))
+        accuracy = np.mean(accuracy_list)
+
+        tp = 0.
+        fp = 0.
+        fn = 0.
+        for i in range(3):
+            tp += confusion_matrix[i][i]
+            fp += (sum(confusion_matrix[:][i]) - confusion_matrix[i][i])
+            fn += (sum(confusion_matrix[i][:]) - confusion_matrix[i][i])
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        f1_score = (2 * precision * recall) / (precision + recall)
+
+        return accuracy, f1_score
+
+
     def train(self, train_data, dev_data, test_data):
+        best_score = 0
+        nepoch_no_imprv = 0
+
         saver = tf.train.Saver()
         with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             # variables need to be initialized before we can use them
@@ -129,12 +196,29 @@ class MLP():
             # writer = tf.summary.FileWriter(os.path.join("./", "model_summaries", timestamp), sess.graph)
 
             for step in range(10):
-                self.run_epoch(sess, train_data, dev_data, test_data, step)
-            saver.save(sess, self.config.model_output)
+                # accuracy, f1_score = self.run_epoch(sess, train_data, dev_data, test_data, step)
+                print(self.run_epoch(sess, train_data, dev_data, test_data, step))
+
+                # add for early stopping
+                # if f1_score >= best_score:
+                #     nepoch_no_imprv = 0
+                #     if not os.path.exists(self.config.model_output):
+                #         os.makedirs(self.config.model_output)
+                #     saver.save(sess, self.config.model_output)
+                #     best_score = f1_score
+                #     self.logger.info("- new best score!")
+                #
+                # else:
+                #     nepoch_no_imprv += 1
+                #     if nepoch_no_imprv >= self.config.nepoch_no_imprv:
+                #         self.logger.info("- early stopping {} epochs without improvement".format(
+                #             nepoch_no_imprv))
+                #         break
+
 
 
             # # 학습된 모델이 얼마나 정확한지를 출력한다.
-            correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.ground_label, 1))
-            accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-            print(sess.run(accuracy, feed_dict={self.input_features: self.input_features, self.ground_label: test_data[300:]}))
+            # correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.ground_label, 1))
+            # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+            # print(sess.run(accuracy, feed_dict={self.input_features: self.input_features, self.ground_label: test_data[300:]}))
 
