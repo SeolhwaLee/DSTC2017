@@ -123,7 +123,7 @@ class Dnn():
         num_batches = (len(train_data) + self.config.batch_size - 1) // self.config.batch_size
         prog = Progbar(target=num_batches)
 
-        for i, (concat_utter_list, ground_label) in enumerate(minibatches(train_data + dev_data + test_data[:100], self.config.batch_size)):
+        for i, (concat_utter_list, ground_label) in enumerate(minibatches(train_data + dev_data + test_data[:300], self.config.batch_size)):
             input_features = []
             for each_utter_list in concat_utter_list:
                 user_sentence = each_utter_list[0]
@@ -156,7 +156,7 @@ class Dnn():
 
             prog.update(i + 1, [("train loss", train_loss)])
 
-        accuracy, precision_X, recall_X, f1_score_X, precision_T, recall_T, f1_score_T, precision_B_T, recall_B_T, f1_score_B_T = self.run_evaluate(sess, test_data[100:])
+        accuracy, precision_X, recall_X, f1_score_X, precision_T, recall_T, f1_score_T, precision_B_T, recall_B_T, f1_score_B_T = self.run_evaluate(sess, test_data[300:])
         self.logger.info("accuracy : {:f}".format(accuracy))
         self.logger.info("precision_X : {:f}".format(precision_X))
         self.logger.info("recall_X : {:f}".format(recall_X))
