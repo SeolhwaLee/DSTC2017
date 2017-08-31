@@ -14,9 +14,10 @@ def main(config):
     utter_embed = UtteranceEmbed(config.word2vec_filename)
 
     input_size = (utter_embed.get_vector_size() * 2) # concat size
-    num_neuron = 7500
+    # num_neuron = 7500
+    num_neurons = [7500, 7500, 5000, 2500]
 
-    model = Dnn(input_size, num_neuron, 3, utter_embed, config)
+    model = Dnn(input_size, num_neurons, 3, utter_embed, config)
     model.build()
     model.train(train_data, dev_data, test_data)
 

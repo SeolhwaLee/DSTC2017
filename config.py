@@ -7,10 +7,6 @@ class Config():
         # directory for training outputs
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
-
-        elif not os.path.exists(self.model_output):
-            os.makedirs(self.model_output)
-
         self.logger = get_logger(self.log_path)
 
     output_path = 'results/mlp/'
@@ -20,8 +16,14 @@ class Config():
     reload = False
 
     lr = 0.005
-    num_epochs = 50
+    lr_decay = 0.9
+    beta = 0.01
+    num_layer = 5
+    num_epochs = 80
     batch_size = 10
+    nepoch_no_imprv = 3
+
+
     embed_method = 'word2vec'
 
     # file name lists for training
