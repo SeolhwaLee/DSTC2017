@@ -19,7 +19,7 @@ class Config():
     lr_decay = 0.9
     beta = 0.01
     num_layer = 5
-    num_epochs = 80
+    num_epochs = 20
     batch_size = 10
     nepoch_no_imprv = 3
 

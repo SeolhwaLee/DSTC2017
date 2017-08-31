@@ -156,7 +156,8 @@ class Dnn():
 
             prog.update(i + 1, [("train loss", train_loss)])
 
-        accuracy, precision_X, recall_X, f1_score_X, precision_T, recall_T, f1_score_T, precision_B_T, recall_B_T, f1_score_B_T = self.run_evaluate(sess, test_data[300:])
+        accuracy, precision_X, recall_X, f1_score_X, precision_B_T, recall_B_T, f1_score_B_T = self.run_evaluate(sess, test_data[300:])
+
         self.logger.info("accuracy : {:f}".format(accuracy))
         self.logger.info("precision_X : {:f}".format(precision_X))
         self.logger.info("recall_X : {:f}".format(recall_X))
@@ -166,8 +167,6 @@ class Dnn():
         self.logger.info("recall X + T : {:f}".format(recall_B_T))
         self.logger.info("f1_score X + T : {:f}".format(f1_score_B_T))
 
-        # self.logger.info("- dev acc {:04.2f} - f1 {:04.2f}".format(100 * accuracy, 100 * f1_score))
-        # self.logger.info("- test acc {:04.2f} - pre {:f} - recall {:0f}- f1 {:04.2f}".format(100 * accuracy, 100 * precision, 100 * recall, 100 * f1_score))
         return accuracy, f1_score_X
 
     def run_evaluate(self, sess, test_data):
@@ -228,22 +227,17 @@ class Dnn():
         fn_O = (sum(confusion_matrix[0][:]) - confusion_matrix[0][0])
         fn_X = (sum(confusion_matrix[1][:]) - confusion_matrix[1][1])
         fn_T = (sum(confusion_matrix[2][:]) - confusion_matrix[2][2])
-
         print(confusion_matrix)
+
         precision_X = tp_X / (tp_X + fp_X)
         recall_X = tp_X / (tp_X + fn_X)
         f1_score_X = (2 * precision_X * recall_X) / (precision_X + recall_X)
 
-        precision_T = tp_T / (tp_T + fp_T)
-        recall_T = tp_T / (tp_T + fn_T)
-        f1_score_T = (2 * precision_T * recall_T) / (precision_T + recall_T)
-
         precision_B_T = (tp_X + tp_T) / ((tp_X + fp_X) + (tp_T + fp_T))
-        recall_B_T = (tp_X + tp_T) / ((tp_X + fn_X) + (tp_T + fn_T))
+        recall_B_T = (tp_T + tp_X) / ((tp_T + fn_T) + (tp_X + fn_X))
         f1_score_B_T = (2 * precision_B_T * recall_B_T) / (precision_B_T + recall_B_T)
 
-
-        return accuracy, precision_X, recall_X, f1_score_X, precision_T, recall_T, f1_score_T, precision_B_T, recall_B_T, f1_score_B_T
+        return accuracy, precision_X, recall_X, f1_score_X, precision_B_T, recall_B_T, f1_score_B_T
 
     def train(self, train_data, dev_data, test_data):
         best_score = 0
@@ -253,6 +247,11 @@ class Dnn():
         with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             # variables need to be initialized before we can use them
             sess.run(tf.global_variables_initializer())
+
+            if self.config.reload:
+                self.logger.info("Reloading the latest trained model...")
+                saver.restore(sess, self.config.model_output)
+            # self.add_summary(sess)
 
             for epoch in range(self.config.num_epochs):
                 self.logger.info("Epoch {:} out of {:}".format(epoch + 1, self.config.num_epochs))
